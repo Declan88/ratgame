@@ -10,8 +10,10 @@ from character import Character
 loadPrcFileData("", "win-size 1280 720")
 loadPrcFileData("", "dpiaware 1")
 
+
 class MyApp(ShowBase):
     def __init__(self):
+        print("Hello!")
         super().__init__()
         self.disableMouse()
 
@@ -38,14 +40,16 @@ class MyApp(ShowBase):
         # Initialize Subsystems
         self.scene_mgr = SceneManager(self)
         self.scene_mgr.load_map("Maps/Test", "testmap.json")
-        
+
         self.player = Character(self)
 
     def toggle_mouse(self):
         props = WindowProperties()
         is_hidden = not self.win.getProperties().getCursorHidden()
         props.setCursorHidden(is_hidden)
-        props.setMouseMode(WindowProperties.M_confined if is_hidden else WindowProperties.M_absolute)
+        props.setMouseMode(
+            WindowProperties.M_confined if is_hidden else WindowProperties.M_absolute
+        )
         self.win.requestProperties(props)
 
     def toggle_fullscreen(self):
@@ -71,6 +75,7 @@ class MyApp(ShowBase):
 
         if self.camLens and height > 0:
             self.camLens.setAspectRatio(width / height)
+
 
 if __name__ == "__main__":
     app = MyApp()
