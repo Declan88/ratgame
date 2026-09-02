@@ -17,7 +17,7 @@ class Character:
 
         # Create base player node for movement/rotation (Upright)
         self.node = app.render.attachNewNode("player")
-        self.node.setZ(15.0)
+        self.node.setZ(50.0)
 
         # Reparent camera to player node for pitch control
         app.camera.reparentTo(self.node)
