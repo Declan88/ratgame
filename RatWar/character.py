@@ -1,7 +1,12 @@
 from panda3d.core import (
-    Vec3, CollisionNode, CollisionCapsule, 
-    CollisionHandlerPusher, CollisionTraverser, ButtonHandle
+    Vec3,
+    CollisionNode,
+    CollisionCapsule,
+    CollisionHandlerPusher,
+    CollisionTraverser,
+    ButtonHandle,
 )
+
 
 class Character:
     def __init__(self, app):
@@ -24,7 +29,7 @@ class Character:
 
         # Setup Collision Capsule attached to player root
         app.cTrav, app.pusher = CollisionTraverser(), CollisionHandlerPusher()
-        col = self.node.attachNewNode(CollisionNode('playerCapsule'))
+        col = self.node.attachNewNode(CollisionNode("playerCapsule"))
         col.node().addSolid(CollisionCapsule(0, 0, -4.5, 0, 0, -1.2, 1.2))
         col.node().setFromCollideMask(1)
         col.node().setIntoCollideMask(0)
@@ -50,24 +55,28 @@ class Character:
         if mw.hasMouse() and self.app.win.getProperties().getCursorHidden():
             self.heading -= mw.getMouseX() * self.sens
             self.pitch = max(-89.0, min(89.0, self.pitch + mw.getMouseY() * self.sens))
-            
+
             # Rotate player node horizontally, camera vertically
             self.node.setH(self.heading)
             self.app.camera.setP(self.pitch)
-            self.app.win.movePointer(0, self.app.win.getXSize() // 2, self.app.win.getYSize() // 2)
+            self.app.win.movePointer(
+                0, self.app.win.getXSize() // 2, self.app.win.getYSize() // 2
+            )
 
         # Movement Inputs (Relative to upright player node)
         btn = mw.is_button_down
-        x = btn(ButtonHandle('d')) - btn(ButtonHandle('a'))
-        y = btn(ButtonHandle('w')) - btn(ButtonHandle('s'))
+        x = btn(ButtonHandle("d")) - btn(ButtonHandle("a"))
+        y = btn(ButtonHandle("w")) - btn(ButtonHandle("s"))
 
         self.node.setPos(self.node, Vec3(x, y, 0) * self.speed * dt)
 
         # Jump & Gravity Logic
         if self.app.pusher.has_contact() and self.velocity_z <= 0:
-            self.velocity_z = self.jump_force if btn(ButtonHandle('space')) else 0.0
+            self.velocity_z = self.jump_force if btn(ButtonHandle("space")) else 0.0
         else:
             self.velocity_z += self.gravity * dt
 
-        self.node.setZ(self.app.render, self.node.getZ(self.app.render) + self.velocity_z * dt)
+        self.node.setZ(
+            self.app.render, self.node.getZ(self.app.render) + self.velocity_z * dt
+        )
         return task.cont
