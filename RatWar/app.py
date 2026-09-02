@@ -14,6 +14,7 @@ loadPrcFileData("", "dpiaware 1")
 class MyApp(ShowBase):
     def __init__(self):
         print("Hello!")
+        print("Commit2")
         super().__init__()
         self.disableMouse()
 
