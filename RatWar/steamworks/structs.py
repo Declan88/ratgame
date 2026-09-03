@@ -107,67 +107,57 @@ class MicroTxnAuthorizationResponse_t(Structure):
 
 
 class GetAppDependenciesResult_t(Structure):
-    """Result from GetAppDependencies call
-
-    Returns app dependencies associated with a workshop item.
-    These are "soft" dependencies shown on the web.
-    """
     _fields_ = [
-        ("result", c_int),                      # EResult
-        ("publishedFileId", c_uint64),          # PublishedFileId_t
-        ("rgAppIDs", c_uint32 * 32),            # Array of AppId_t (max 32)
-        ("numAppDependencies", c_uint32),       # Count returned in this struct
-        ("totalNumAppDependencies", c_uint32)   # Total dependencies found
+        ("result", c_int),
+        ("publishedFileId", c_uint64),
+        ("rgAppIDs", c_uint32 * 32),
+        ("numAppDependencies", c_uint32),
+        ("totalNumAppDependencies", c_uint32)
     ]
 
 
 class DownloadItemResult_t(Structure):
-    """Result from DownloadItem call
-
-    Callback fired when workshop item has been downloaded.
-    Contains the app ID associated with the workshop item.
-    """
     _fields_ = [
-        ("appID", c_uint32),                    # AppId_t - associated app
-        ("publishedFileId", c_uint64),          # PublishedFileId_t
-        ("result", c_int)                       # EResult
+        ("appID", c_uint32),
+        ("publishedFileId", c_uint64),
+        ("result", c_int)
     ]
 
 
-# NOTE: on Windows/MSVC the Steamworks callback structs use
-# VALVE_CALLBACK_PACK_LARGE (#pragma pack(8)), so the natural ctypes
-# alignment below (uint64 on an 8-byte boundary) matches the C layout.
 class AddUGCDependencyResult_t(Structure):
-    """Result from AddDependency / a workshop "Required Item" link."""
     _fields_ = [
-        ("result", c_int),                      # EResult
-        ("publishedFileId", c_uint64),          # PublishedFileId_t (parent)
-        ("childPublishedFileId", c_uint64)      # PublishedFileId_t (child)
+        ("result", c_int),
+        ("publishedFileId", c_uint64),
+        ("childPublishedFileId", c_uint64)
     ]
 
 
 class RemoveUGCDependencyResult_t(Structure):
-    """Result from RemoveDependency."""
     _fields_ = [
-        ("result", c_int),                      # EResult
-        ("publishedFileId", c_uint64),          # PublishedFileId_t (parent)
-        ("childPublishedFileId", c_uint64)      # PublishedFileId_t (child)
+        ("result", c_int),
+        ("publishedFileId", c_uint64),
+        ("childPublishedFileId", c_uint64)
     ]
 
 
 class AddAppDependencyResult_t(Structure):
-    """Result from AddAppDependency (item depends on a game/DLC AppID)."""
     _fields_ = [
-        ("result", c_int),                      # EResult
-        ("publishedFileId", c_uint64),          # PublishedFileId_t
-        ("appID", c_uint32)                     # AppId_t
+        ("result", c_int),
+        ("publishedFileId", c_uint64),
+        ("appID", c_uint32)
     ]
 
 
 class RemoveAppDependencyResult_t(Structure):
-    """Result from RemoveAppDependency."""
     _fields_ = [
-        ("result", c_int),                      # EResult
-        ("publishedFileId", c_uint64),          # PublishedFileId_t
-        ("appID", c_uint32)                     # AppId_t
+        ("result", c_int),
+        ("publishedFileId", c_uint64),
+        ("appID", c_uint32)
+    ]
+
+
+class LobbyCreated_t(Structure):
+    _fields_ = [
+        ("m_eResult", c_int32),
+        ("m_ulSteamIDLobby", c_uint64)
     ]
