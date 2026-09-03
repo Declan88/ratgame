@@ -64,6 +64,26 @@ class NetworkManager:
             taskMgr.add(self.poll_packets, "poll_network_task")
             taskMgr.add(self.broadcast_transform_task, "broadcast_transform_task")
 
+    def print_session_roster(self):
+        if not self.current_lobby_id:
+            return
+        try:
+            members = self.client.get_lobby_members(self.current_lobby_id)
+            if not members:
+                return
+            
+            host_id = members[0]  # First member is the lobby owner/host
+            print("\n===============================")
+            print("       SESSION ROSTER          ")
+            print("===============================")
+            for member_id in members:
+                role = "HOST" if member_id == host_id else "CLIENT"
+                is_local = " (You)" if member_id == self.local_steam_id else ""
+                print(f" - Steam ID: {member_id}{is_local} [{role}]")
+            print("===============================\n")
+        except Exception as e:
+            print(f"Error printing session roster: {e}")
+
     def on_lobby_created(self, lobby_id, error=None):
         if error:
             print(f"\n--> Failed to create lobby: {error}")
@@ -71,6 +91,7 @@ class NetworkManager:
             self.current_lobby_id = lobby_id
             print(f"\n--> SUCCESS! Lobby Created ID: {self.current_lobby_id}")
             print("Hosting game session...")
+            self.print_session_roster()
 
     def on_lobby_joined(self, lobby_id, error=None):
         if error:
@@ -78,15 +99,12 @@ class NetworkManager:
         else:
             self.current_lobby_id = lobby_id
             print(f"\n--> SUCCESS! Joined Lobby ID: {self.current_lobby_id}")
+            self.print_session_roster()
 
     def on_lobby_changed(self, lobby_id, user_changed, making_change, member_state_change):
         print(f"\n[Lobby Update] Lobby ID: {lobby_id}, User: {user_changed}, State Change: {member_state_change}")
         if self.current_lobby_id:
-            try:
-                members = self.client.get_lobby_members(self.current_lobby_id)
-                print(f"Current Lobby Members: {members}")
-            except Exception as e:
-                print(f"Error fetching lobby members: {e}")
+            self.print_session_roster()
 
     def setup_networking_mode(self):
         print("\n--- Scanning for Open Lobbies ---")
