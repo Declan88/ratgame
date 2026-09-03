@@ -8,11 +8,16 @@ class NetworkManager:
     def __init__(self, app):
         self.app = app
         self.remote_players = {}
+        self.current_lobby_id = None
 
         try:
             self.steam = STEAMWORKS()
             self.steam.initialize()
             print("Steam P2P initialized successfully.")
+            
+            # Run lobby check right after successful initialization
+            self.setup_lobby()
+            
         except Exception as e:
             print(
                 f"Steam initialization failed: {e}. Make sure Steam client is running."
@@ -21,6 +26,18 @@ class NetworkManager:
 
         if self.steam:
             taskMgr.add(self.poll_packets, "poll_network_task")
+
+    def setup_lobby(self):
+        """Checks for an active lobby or creates a new one if none exist."""
+        # Note: steamworks-py handles lobby searches via Matchmaking callbacks. 
+        # For a simplified setup, you can attempt to join a known lobby ID 
+        # or implement a request list flow. If starting fresh, we create a public lobby.
+        
+        # Example: Requesting lobby list (ensure 'RequestLobbyList' is in your methods.py if used)
+        # For simplicity, if no active lobby handler is cached, create one:
+        print("Creating a new Steam lobby...")
+        # k_ELobbyTypePublic = 0, Max members = 4
+        self.steam.Matchmaking.CreateLobby(0, 4)
 
     def poll_packets(self, task):
         if not self.steam:
