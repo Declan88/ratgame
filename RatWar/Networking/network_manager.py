@@ -82,29 +82,44 @@ class NetworkManager:
     def on_lobby_changed(self, lobby_id, user_changed, making_change, member_state_change):
         print(f"\n[Lobby Update] Lobby ID: {lobby_id}, User: {user_changed}, State Change: {member_state_change}")
         if self.current_lobby_id:
-            members = self.client.get_lobby_members(self.current_lobby_id)
-            print(f"Current Lobby Members: {members}")
+            try:
+                members = self.client.get_lobby_members(self.current_lobby_id)
+                print(f"Current Lobby Members: {members}")
+            except Exception as e:
+                print(f"Error fetching lobby members: {e}")
 
     def setup_networking_mode(self):
         print("\n--- Scanning for Open Lobbies ---")
         
-        # Request a list of public lobbies (App ID 480)
-        lobbies = self.client.get_lobby_list() if hasattr(self.client, "get_lobby_list") else []
-        
-        # Filter for valid open lobbies with space available
-        open_lobby_id = None
-        if lobbies:
-            for l_id in lobbies:
-                members = self.client.get_lobby_members(l_id)
-                if len(members) < 4:  # Assuming max 4 players
-                    open_lobby_id = l_id
-                    break
+        def handle_lobby_list(lobbies, error):
+            if error:
+                print(f"Failed to request lobby list: {error}")
+                print("Hosting a new lobby instead...")
+                self.client.create_lobby(2, 4, self.on_lobby_created)
+                return
 
-        if open_lobby_id:
-            print(f"Found open lobby {open_lobby_id}. Joining automatically...")
-            self.client.join_lobby(open_lobby_id, self.on_lobby_joined)
-        else:
-            print("No open lobbies found. Hosting a new lobby...")
+            open_lobby_id = None
+            if lobbies:
+                for l_id in lobbies:
+                    try:
+                        members = self.client.get_lobby_members(l_id)
+                        if members and len(members) < 4:
+                            open_lobby_id = l_id
+                            break
+                    except Exception:
+                        continue
+
+            if open_lobby_id:
+                print(f"Found open lobby {open_lobby_id}. Joining automatically...")
+                self.client.join_lobby(open_lobby_id, self.on_lobby_joined)
+            else:
+                print("No open lobbies found. Hosting a new lobby...")
+                self.client.create_lobby(2, 4, self.on_lobby_created)
+
+        try:
+            self.client.get_lobby_list(handle_lobby_list)
+        except Exception as e:
+            print(f"Error initiating lobby list request: {e}")
             self.client.create_lobby(2, 4, self.on_lobby_created)
 
     def poll_packets(self, task):
@@ -131,17 +146,20 @@ class NetworkManager:
                 "hpr": [current_hpr.x, current_hpr.y, current_hpr.z]
             }).encode("utf-8")
 
-            members = self.client.get_lobby_members(self.current_lobby_id)
-            for member_id in members:
-                if member_id != self.local_steam_id:
-                    self.client.send_message_to(member_id, 2, 0, payload)
+            try:
+                members = self.client.get_lobby_members(self.current_lobby_id)
+                for member_id in members:
+                    if member_id != self.local_steam_id:
+                        self.client.send_message_to(member_id, 2, 0, payload)
+            except Exception:
+                pass
 
             self.last_pos = current_pos
             self.last_hpr = current_hpr
 
         return task.cont
 
-    def handle_data(self, sender_id, msg_bytes):
+    def handle_data(self, sender_id, ch, msg_bytes):
         if sender_id not in self.remote_players:
             print(f"\n--> Discovered peer in lobby: {sender_id}")
             self.remote_players[sender_id] = RemotePlayer(self.app, sender_id)

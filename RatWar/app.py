@@ -1,4 +1,14 @@
 import ctypes
+import os
+import sys
+
+# Pre-load steam_api64.dll globally before any modules import py_steam_net
+if sys.platform == "win32":
+    dll_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "steam_api64.dll")
+    if os.path.exists(dll_path):
+        ctypes.CDLL(dll_path, mode=ctypes.RTLD_GLOBAL)
+        os.add_dll_directory(os.path.dirname(dll_path))
+
 from direct.showbase.ShowBase import ShowBase
 from direct.filter.CommonFilters import CommonFilters
 from panda3d.core import WindowProperties, loadPrcFileData
