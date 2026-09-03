@@ -1,4 +1,5 @@
 import json
+import sys
 from direct.task.TaskManagerGlobal import taskMgr
 from .remote_player import RemotePlayer
 from steamworks import STEAMWORKS
@@ -15,8 +16,9 @@ class NetworkManager:
             self.steam.initialize()
             print("Steam P2P initialized successfully.")
             
-            # Run lobby check right after successful initialization
-            self.setup_lobby()
+            # Decide whether to host or join based on command-line arguments
+            # e.g., run `python app.py --host` on machine 1, and `python app.py --join <LOBBY_ID>` on machine 2
+            self.setup_networking_mode()
             
         except Exception as e:
             print(
@@ -27,17 +29,23 @@ class NetworkManager:
         if self.steam:
             taskMgr.add(self.poll_packets, "poll_network_task")
 
-    def setup_lobby(self):
-        """Checks for an active lobby or creates a new one if none exist."""
-        # Note: steamworks-py handles lobby searches via Matchmaking callbacks. 
-        # For a simplified setup, you can attempt to join a known lobby ID 
-        # or implement a request list flow. If starting fresh, we create a public lobby.
-        
-        # Example: Requesting lobby list (ensure 'RequestLobbyList' is in your methods.py if used)
-        # For simplicity, if no active lobby handler is cached, create one:
-        print("Creating a new Steam lobby...")
-        # k_ELobbyTypePublic = 0, Max members = 4
-        self.steam.Matchmaking.CreateLobby(0, 4)
+    def setup_networking_mode(self):
+        if "--host" in sys.argv:
+            print("Hosting a new Steam lobby...")
+            # k_ELobbyTypePublic = 0, Max members = 4
+            self.steam.Matchmaking.CreateLobby(0, 4)
+        elif "--join" in sys.argv:
+            try:
+                lobby_index = sys.argv.index("--join")
+                lobby_id = int(sys.argv[lobby_index + 1])
+                print(f"Joining lobby ID: {lobby_id}...")
+                self.steam.Matchmaking.JoinLobby(lobby_id)
+                self.current_lobby_id = lobby_id
+            except (IndexError, ValueError):
+                print("Error: --join requires a valid numeric Lobby ID.")
+        else:
+            print("No networking flag specified. Defaulting to creating a lobby...")
+            self.steam.Matchmaking.CreateLobby(0, 4)
 
     def poll_packets(self, task):
         if not self.steam:
