@@ -13,11 +13,11 @@ class Character:
         self.app = app
         self.heading = self.pitch = 0.0
         self.speed, self.sens = 15.0, 15.0
-        self.velocity_z, self.gravity, self.jump_force = 0.0, -32.0, 12.0
+        self.velocity_z, self.gravity, self.jump_force = 0.0, -32.0, 50
 
         # Create base player node for movement/rotation (Upright)
         self.node = app.render.attachNewNode("player")
-        self.node.setZ(50.0)
+        self.node.setZ(75)
 
         # Reparent camera to player node for pitch control
         app.camera.reparentTo(self.node)
