@@ -64,7 +64,7 @@ class NetworkManager:
             taskMgr.add(self.poll_packets, "poll_network_task")
             taskMgr.add(self.broadcast_transform_task, "broadcast_transform_task")
 
-    def print_session_roster(self):
+    def print_session_roster(self, task=None):
         if not self.current_lobby_id:
             return
         try:
@@ -91,7 +91,8 @@ class NetworkManager:
             self.current_lobby_id = lobby_id
             print(f"\n--> SUCCESS! Lobby Created ID: {self.current_lobby_id}")
             print("Hosting game session...")
-            self.print_session_roster()
+            # Slight delay to ensure steam internal lobby states sync up
+            taskMgr.doMethodLater(0.5, self.print_session_roster, "print_roster_created")
 
     def on_lobby_joined(self, lobby_id, error=None):
         if error:
@@ -99,12 +100,14 @@ class NetworkManager:
         else:
             self.current_lobby_id = lobby_id
             print(f"\n--> SUCCESS! Joined Lobby ID: {self.current_lobby_id}")
-            self.print_session_roster()
+            # Slight delay to let Steam finish mapping network peer members
+            taskMgr.doMethodLater(0.5, self.print_session_roster, "print_roster_joined")
 
     def on_lobby_changed(self, lobby_id, user_changed, making_change, member_state_change):
         print(f"\n[Lobby Update] Lobby ID: {lobby_id}, User: {user_changed}, State Change: {member_state_change}")
         if self.current_lobby_id:
-            self.print_session_roster()
+            # Delay roster print slightly to allow steam client to finish syncing member metadata
+            taskMgr.doMethodLater(0.3, self.print_session_roster, "print_roster_changed")
 
     def setup_networking_mode(self):
         print("\n--- Scanning for Open Lobbies ---")
