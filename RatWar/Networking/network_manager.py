@@ -70,7 +70,7 @@ class NetworkManager:
         else:
             self.current_lobby_id = lobby_id
             print(f"\n--> SUCCESS! Lobby Created ID: {self.current_lobby_id}")
-            print("Copy this ID and share it with your friend to join.")
+            print("Hosting game session...")
 
     def on_lobby_joined(self, lobby_id, error=None):
         if error:
@@ -86,24 +86,25 @@ class NetworkManager:
             print(f"Current Lobby Members: {members}")
 
     def setup_networking_mode(self):
-        print("\n--- Networking Setup ---")
-        print("1. Host a new lobby")
-        print("2. Join an existing lobby")
-        choice = input("Select an option (1 or 2): ").strip()
+        print("\n--- Scanning for Open Lobbies ---")
+        
+        # Request a list of public lobbies (App ID 480)
+        lobbies = self.client.get_lobby_list() if hasattr(self.client, "get_lobby_list") else []
+        
+        # Filter for valid open lobbies with space available
+        open_lobby_id = None
+        if lobbies:
+            for l_id in lobbies:
+                members = self.client.get_lobby_members(l_id)
+                if len(members) < 4:  # Assuming max 4 players
+                    open_lobby_id = l_id
+                    break
 
-        if choice == "1":
-            print("Hosting a new Steam lobby...")
-            self.client.create_lobby(2, 4, self.on_lobby_created)
-        elif choice == "2":
-            try:
-                lobby_id_input = input("Paste Lobby ID: ").strip()
-                lobby_id = int(lobby_id_input)
-                print(f"Joining lobby ID: {lobby_id}...")
-                self.client.join_lobby(lobby_id, self.on_lobby_joined)
-            except ValueError:
-                print("Error: Invalid Lobby ID. Must be a numeric value.")
+        if open_lobby_id:
+            print(f"Found open lobby {open_lobby_id}. Joining automatically...")
+            self.client.join_lobby(open_lobby_id, self.on_lobby_joined)
         else:
-            print("Invalid choice. Defaulting to hosting a new lobby...")
+            print("No open lobbies found. Hosting a new lobby...")
             self.client.create_lobby(2, 4, self.on_lobby_created)
 
     def poll_packets(self, task):
