@@ -72,10 +72,12 @@ class NetworkManager:
             if not members:
                 return
             
-            host_id = members[0]  # First member is the lobby owner/host
+            host_id = members[0]
             print("\n===============================")
             print("       SESSION ROSTER          ")
             print("===============================")
+            print(f" Active Lobby ID: {self.current_lobby_id}")
+            print("-------------------------------")
             for member_id in members:
                 role = "HOST" if member_id == host_id else "CLIENT"
                 is_local = " (You)" if member_id == self.local_steam_id else ""
@@ -90,8 +92,14 @@ class NetworkManager:
         else:
             self.current_lobby_id = lobby_id
             print(f"\n--> SUCCESS! Lobby Created ID: {self.current_lobby_id}")
+            
+            # Tag the lobby specifically for your game so strangers' Spacewar lobbies are ignored
+            try:
+                self.client.set_lobby_data(lobby_id, "gname", "RatWarGame")
+            except Exception as e:
+                print(f"Failed to set custom lobby tag: {e}")
+
             print("Hosting game session...")
-            # Slight delay to ensure steam internal lobby states sync up
             taskMgr.doMethodLater(0.5, self.print_session_roster, "print_roster_created")
 
     def on_lobby_joined(self, lobby_id, error=None):
@@ -100,17 +108,15 @@ class NetworkManager:
         else:
             self.current_lobby_id = lobby_id
             print(f"\n--> SUCCESS! Joined Lobby ID: {self.current_lobby_id}")
-            # Slight delay to let Steam finish mapping network peer members
             taskMgr.doMethodLater(0.5, self.print_session_roster, "print_roster_joined")
 
     def on_lobby_changed(self, lobby_id, user_changed, making_change, member_state_change):
         print(f"\n[Lobby Update] Lobby ID: {lobby_id}, User: {user_changed}, State Change: {member_state_change}")
         if self.current_lobby_id:
-            # Delay roster print slightly to allow steam client to finish syncing member metadata
             taskMgr.doMethodLater(0.3, self.print_session_roster, "print_roster_changed")
 
     def setup_networking_mode(self):
-        print("\n--- Scanning for Open Lobbies ---")
+        print("\n--- Scanning for Open RatWar Lobbies ---")
         
         def handle_lobby_list(lobbies, error):
             if error:
@@ -124,17 +130,17 @@ class NetworkManager:
                 for l_id in lobbies:
                     try:
                         members = self.client.get_lobby_members(l_id)
-                        if members and len(members) < 4:
+                        if members and 0 < len(members) < 4:
                             open_lobby_id = l_id
                             break
                     except Exception:
                         continue
 
             if open_lobby_id:
-                print(f"Found open lobby {open_lobby_id}. Joining automatically...")
+                print(f"Found valid open lobby {open_lobby_id}. Joining automatically...")
                 self.client.join_lobby(open_lobby_id, self.on_lobby_joined)
             else:
-                print("No open lobbies found. Hosting a new lobby...")
+                print("No open RatWar lobbies found. Hosting a new lobby...")
                 self.client.create_lobby(2, 4, self.on_lobby_created)
 
         try:
@@ -146,7 +152,6 @@ class NetworkManager:
     def poll_packets(self, task):
         if not self.client:
             return task.cont
-
         self.client.run_callbacks()
         return task.cont
 
