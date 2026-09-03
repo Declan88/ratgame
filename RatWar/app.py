@@ -6,7 +6,7 @@ from panda3d.core import WindowProperties, loadPrcFileData
 from scene_manager import SceneManager
 from character import Character
 
-# High-DPI scaling configuration
+# High-DPI scaling
 loadPrcFileData("", "win-size 1280 720")
 loadPrcFileData("", "dpiaware 1")
 
@@ -19,10 +19,10 @@ class MyApp(ShowBase):
 
         self.is_fullscreen = False
 
-        # FIX: Set initial far clipping plane on startup so skybox isn't clipped
+        # Set clipping plane
         self.camLens.setFar(100000)
 
-        # Enable HDR processing so directional light intensity above 1.0 brightens scene
+        # Allow directional light intensity >1
         self.filters = CommonFilters(self.win, self.cam)
         self.filters.setHighDynamicRange()
 
