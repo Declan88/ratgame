@@ -5,6 +5,7 @@ from panda3d.core import WindowProperties, loadPrcFileData
 
 from scene_manager import SceneManager
 from character import Character
+from Networking.network_manager import NetworkManager
 
 # High-DPI scaling
 loadPrcFileData("", "win-size 1280 720")
@@ -42,6 +43,9 @@ class MyApp(ShowBase):
         self.scene_mgr.load_map("Maps/Test", "testmap.json")
 
         self.player = Character(self)
+
+        # Initialize Network Manager at startup
+        self.net_mgr = NetworkManager(self)
 
     def toggle_mouse(self):
         props = WindowProperties()
